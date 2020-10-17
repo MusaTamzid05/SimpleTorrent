@@ -5,7 +5,9 @@ project(testas)
 
 set(Source
     src/main.cpp
-    src/torrent.cpp)
+    src/torrent.cpp
+    src/util.cpp
+    )
 
 
 
@@ -13,4 +15,4 @@ include_directories(include )
 add_executable(testas ${Source})
 
 
-target_link_libraries(testas torrent-rasterbar boost_system boost_filesystem)
+target_link_libraries(testas torrent-rasterbar boost_system boost_filesystem pthread)
