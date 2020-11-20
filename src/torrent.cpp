@@ -50,18 +50,18 @@ namespace SimpleTorrent {
     void Torrent::download(const std::string url, const std::string dst_path) {
         std::cout << "downloading from " << url << " to " << dst_path << "\n";
         init_session(url, dst_path);
-        bool downloading = true;
+        bool running = true;
 
-        while(downloading) {
+        while(running) {
             std::vector<lt::alert*> alerts;
             sess.pop_alerts(&alerts);
-            downloading  = handle_session(alerts);
+            running = handle_session(alerts);
 
-            if(downloading)
+            if(running)
                 update();
         }
 
-        std::cout << "Torrent stoped.\n";
+        std::cout << "Torrent stopped.\n";
     }
 
 
@@ -87,7 +87,7 @@ namespace SimpleTorrent {
 
     bool Torrent::handle_session(std::vector<lt::alert*> alerts) {
 
-        bool downloading = true;
+        bool running = true;
 
         for(lt::alert const* alert : alerts) {
             if(auto at = lt::alert_cast<lt::add_torrent_alert>(alert))
@@ -96,13 +96,12 @@ namespace SimpleTorrent {
             if(lt::alert_cast<lt::torrent_finished_alert>(alert)) {
                 handle.save_resume_data(lt::torrent_handle::save_info_dict);
                 std::cout << alert->message() << "\n";
-                downloading = false;
             }
 
             if(lt::alert_cast<lt::torrent_error_alert>(alert)) {
                 std::cout << alert->message() << "\n";
                 handle.save_resume_data(lt::torrent_handle::save_info_dict);
-                downloading = false;
+                running = false;
             }
 
             if(auto rd = lt::alert_cast<lt::save_resume_data_alert>(alert)) {
@@ -112,12 +111,12 @@ namespace SimpleTorrent {
                 of.write(b.data(), int(b.size()));
 	
 
-                if(!downloading) return false;
+                if(!running) return false;
 
             }
 
             if(lt::alert_cast<lt::save_resume_data_failed_alert>(alert)) {
-                if(!downloading) return false;
+                if(!running) return false;
             }
 
             if(auto st = lt::alert_cast<lt::state_update_alert>(alert)) {
@@ -137,7 +136,7 @@ namespace SimpleTorrent {
 
         }
 
-        return downloading;
+        return running;
     }
 
     void Torrent::update() {
